@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('tableau-de-bord', [HomeController::class, 'backend_index'])->name('dashboard.index');
     Route::get('tableau-de-bord/publications', [PostController::class, 'posts_index'])->name('posts.index');
     Route::get('tableau-de-bord/categories', [CategoryController::class, 'categories_index'])->name('categories.index');
-    Route::get('tableau-de-bord/produits', [ProductController::class, 'produits_index'])->name('produits.index');
+    Route::get('tableau-de-bord/produits', [ProductController::class, 'products_index'])->name('products.index');
 
 
     //User account

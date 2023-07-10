@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Product;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function produits_index()
+    public function products_index()
     {
         $products = Product::all();
-        return view('back.pages.products.create', compact('products'));
+        return view('back.pages.products.index', compact('products'));
     }
 
     public function create()
@@ -29,20 +31,22 @@ class ProductController extends Controller
             'prix' => 'required|numeric',
         ]);
 
-        // Création d'un nouveau produit
-        $product = new Product;
-        $product->nom = $validatedData['nom'];
-        $product->description = $validatedData['description'];
-        $product->stock = $validatedData['stock'];
-        $product->prix = $validatedData['prix'];
-        // Enregistrement de l'image si nécessaire
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('public/images');
-            $product->image = $imagePath;
+            //$imageName = $request->image->store('posts');
+            $imageName = $request->image->store('produits');
+            $image = Image::make(public_path("storage/{$imageName}"))->fit(1200, 853);
+            $image->save();
         }
-        $product->save();
 
-        return redirect()->route('product.index')->with('success', 'Le produit a été ajouté avec succès.');
+        Product::create([
+            'nom' => $request->nom,
+            'description' => $request->description,
+            'stock' => $request->stock,
+            'prix' => $request->prix,
+            'image' => $imageName
+        ]);
+
+        return redirect()->route('products.index')->with('success', 'Le produit a été ajouté avec succès.');
     }
 
     public function show($id)
@@ -54,40 +58,53 @@ class ProductController extends Controller
     public function edit($id)
     {
         $product = Product::findOrFail($id);
-        return view('products.edit', compact('product'));
+        return view('back.pages.products.edit', compact('product'));
     }
 
     public function update(Request $request, $id)
     {
-        // Validation des données du formulaire
-        $validatedData = $request->validate([
-            'nom' => 'required',
-            'description' => 'required',
-            'stock' => 'required|integer',
-            'prix' => 'required|numeric',
-        ]);
+        $product = Product::where('id', $id)->firstOrFail();
 
-        // Mise à jour du produit
-        $product = Product::findOrFail($id);
-        $product->nom = $validatedData['nom'];
-        $product->description = $validatedData['description'];
-        $product->stock = $validatedData['stock'];
-        $product->prix = $validatedData['prix'];
-        // Mise à jour de l'image si nécessaire
+        $arrayUpdate = [
+            'nom' => $request->nom,
+            'description' => $request->description,
+            'stock' => $request->stock,
+            'prix' => $request->prix
+
+        ];
+
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('public/images');
-            $product->image = $imagePath;
-        }
-        $product->save();
 
-        return redirect()->route('product.index')->with('success', 'Le produit a été mis à jour avec succès.');
+            if ($product->image != null) {
+                Storage::delete($product->image);
+            }
+
+            //$imageName = $request->image->store('posts');
+            $imageName = $request->image->store('produits');
+            $image = Image::make(public_path("storage/{$imageName}"))->fit(1200, 853);
+            $image->save();
+
+            $arrayUpdate = array_merge($arrayUpdate, [
+                'image' => $imageName
+            ]);
+        }
+
+        $product->update($arrayUpdate);
+
+        return redirect()->route('products.index')->with('success', 'Le produit a été mis à jour avec succès.');
     }
 
     public function destroy($id)
     {
+        
         $product = Product::findOrFail($id);
+
+        if ($product->image != null) {
+            Storage::delete($product->image);
+        }
+        
         $product->delete();
 
-        return redirect()->route('product.index')->with('success', 'Le produit a été supprimé avec succès.');
+        return redirect()->route('products.index')->with('success', 'Le produit a été supprimé avec succès.');
     }
 }
