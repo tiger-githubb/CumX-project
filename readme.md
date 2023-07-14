@@ -49,7 +49,7 @@ https://www.youtube.com/watch?v=F8iYtkBXoh4
 
 Unique Slug Generation
 ```shell
-https://codelapan.com/post/how-to-generate-unique-slug-in-laravel-8
+https://codlapn.com/post/how-to-generate-unique-slug-in-laravel-8
 ```
 
 Fit image / Pagination
